@@ -1,0 +1,18 @@
+:root {
+}
+
+.cell {
+  display: flex;
+  align-content: center;
+  vertical-align: center;
+}
+
+.cell > * {
+  display: block;
+  margin: auto;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+  font: normal normal 400 8pt/8pt 'IBM Plex Mono', 'JetBrains Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace;
+}
