@@ -1,11 +1,11 @@
 import * as React from 'react'
 import { useState, useEffect } from 'react'
-import { Color } from '../../lib/colors'
+import { HslaColor } from '../../lib/colors'
 import './cell.css'
 
 export interface CellColor {
-  foreground: Color
-  background: Color
+  foreground: HslaColor
+  background: HslaColor
 }
 
 /**
@@ -38,7 +38,9 @@ export interface CellProps {
  */
 export function Cell<T extends CellProps>(props: T) {
   const [state, setState] = useState({
-    value: 0
+    value: 0,
+    foreground: new HslaColor(0, 1, 1, 0),
+    background: new HslaColor(0, 1, 1, 0)
   })
 
   // Cell Activation Effect
@@ -48,7 +50,8 @@ export function Cell<T extends CellProps>(props: T) {
       props.activationBroadcast.rows.includes(props.cellRowId)) {
       const incremented = state.value + 1
       const newValue = incremented > 0xff ? 0 : incremented
-      setState({ value: newValue })
+      const cellColor = props.colorMap(newValue)
+      setState({ ...state, value: newValue, foreground: cellColor.foreground, background: cellColor.background })
     }
   }, [props.activationBroadcast, props.cellRowId, props.cellColId])
 
@@ -59,11 +62,9 @@ export function Cell<T extends CellProps>(props: T) {
       props.decayBroadcast.rows.includes(props.cellRowId)) {
       const decremented = state.value - 1
       const newValue = decremented < 0 ? 0 : decremented
-      setState({ value: newValue })
+      setState({ ...state, value: newValue })
     }
   }, [props.decayBroadcast])
-
-  const color = props.colorMap(state.value)
 
   return (
     <div className="cell" style={{
@@ -72,8 +73,8 @@ export function Cell<T extends CellProps>(props: T) {
       position: 'absolute',
       top: `${props.y}px`,
       left: `${props.x}px`,
-      color: `rgba(${color.foreground.red}, ${color.foreground.green}, ${color.foreground.blue}, ${color.foreground.alpha})`,
-      backgroundColor: `rgba(${color.background.red}, ${color.background.green}, ${color.background.blue}, ${color.background.alpha})`
+      color: state.foreground.toColorString(),
+      backgroundColor: state.background.toColorString()
     }}>
       <div>{state.value.toString(16)}</div>
     </div>

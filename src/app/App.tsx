@@ -1,9 +1,12 @@
 import React from 'react'
 import { Cell, CellBroadcast, CellColor } from './Cell'
+import { HslaColor } from '../lib/colors'
+import { waveMap } from '../lib/maths'
+import * as lobos from 'lobos'
 import './App.css'
+import { dayFractionNow } from '../lib/time'
 
-const ACTIVATION_PERIOD = 250
-const DECAY_PERIOD = 3000
+const ACTIVATION_PERIOD = 80
 
 interface AppProps {}
 
@@ -15,6 +18,17 @@ interface AppState {
 }
 
 class App extends React.Component<AppProps, AppState> {
+  private readonly cellHeight: number
+  private readonly cellWidth: number
+  private readonly numberOfRows: number
+  private readonly numberOfCols: number
+  private readonly numberOfPoints: number
+  private readonly safetyFactor: number = 1.2
+  private readonly cellDenominator: number = 24
+
+  private activationPointIndex: number = 0
+  private decayPointIndex: number = 0
+
   constructor(props: AppProps) {
     super(props)
     this.state = {
@@ -23,57 +37,68 @@ class App extends React.Component<AppProps, AppState> {
       activationTimer: undefined,
       decayTimer: undefined
     }
+
+    this.cellWidth = window.screen.width / this.cellDenominator
+    this.cellHeight = window.screen.width / this.cellDenominator
+    this.numberOfRows = Math.ceil(window.screen.height * this.safetyFactor / this.cellHeight)
+    this.numberOfCols = Math.ceil(window.screen.width * this.safetyFactor / this.cellWidth)
+    this.numberOfPoints = this.numberOfCols * this.numberOfRows
   }
 
-  cellWidth(): number {
-    return Math.ceil(window.screen.width / 72)
+  async sobolPoints(): Promise<number[][]> {
+    const sequence = new lobos.Sobol(2)
+    return sequence.take(this.numberOfPoints)
   }
 
-  cellHeight(): number {
-    return this.cellWidth()
+  async getActivationPoints(n: number): Promise<number[][]> {
+    const points = await this.sobolPoints()
+    const result = points.slice(this.activationPointIndex, this.activationPointIndex + n)
+    if (this.activationPointIndex + n + 1 > points.length) {
+      // I'm lazy
+      this.activationPointIndex = 0
+    } else {
+      this.activationPointIndex += n + 1
+    }
+    return result
   }
 
-  numberOfRows(): number {
-    return Math.ceil(window.screen.height * 1.2 / this.cellHeight())
-  }
-
-  numberOfCols(): number {
-    return Math.ceil(window.screen.width * 1.2 / this.cellWidth())
+  async getDecayPoints(n: number): Promise<number[][]> {
+    const points = await this.sobolPoints()
+    const result = points.slice(this.decayPointIndex, this.decayPointIndex + n)
+    this.decayPointIndex += n + 1
+    return result
   }
 
   defaultColorMap(value: number): CellColor {
+    const t = dayFractionNow()
+    const foregroundLightness = waveMap(t, 0.7, 1, 0) + 0.1
+    const backgroundLightness = waveMap(t, 0.5, 1, 0.5) + 0.1
+    const backgroundAlpha = waveMap(t, 0.1, 1, 0.5) + 0.05
+    const backgroundSaturation = waveMap(t, 0.1, 1, 0.5) + 0.25
+    const hue1 = waveMap(value, 360, 32, 0)
+    const hue2 = waveMap(value, 360, 16, 64)
     return {
-      foreground: {
-        red: value,
-        green: value,
-        blue: value,
-        alpha: value === 0 ? 0.0 : 1.0
-      },
-      background: {
-        red: 255 - value,
-        green: 255 - value,
-        blue: 255 - value,
-        alpha: 0.45
-      },
+      foreground: new HslaColor(hue2, 0.85, foregroundLightness, 0.8),
+      background: new HslaColor(hue1, backgroundSaturation, backgroundLightness, backgroundAlpha)
     }
   }
 
   render() {
     let cells = []
-    for (let r = 0; r < this.numberOfRows(); r++) {
-      for (let c = 0; c < this.numberOfCols(); c++) {
+    for (let r = 0; r < this.numberOfRows; r++) {
+      for (let c = 0; c < this.numberOfCols; c++) {
         cells.push(
           <Cell
-            key={r*10000 + c}
+            key={r * 10000 + c}
             cellRowId={r}
             cellColId={c}
             activationBroadcast={this.state.activationBroadcast}
             decayBroadcast={this.state.decayBroadcast}
             colorMap={this.defaultColorMap}
-            y={r * this.cellHeight()}
-            x={c * this.cellWidth()}
-            width={this.cellWidth()}
-            height={this.cellHeight()}/>
+            y={r * this.cellHeight}
+            x={c * this.cellWidth}
+            width={this.cellWidth}
+            height={this.cellHeight}/>
         )
       }
     }
@@ -89,25 +114,24 @@ class App extends React.Component<AppProps, AppState> {
 
   componentDidMount() {
     const activationTimer = setInterval(() => {
-      const numberOfCoordinates = 16
-      const rows = Array.from({length: numberOfCoordinates}, () => Math.floor(Math.random() * this.numberOfRows()))
-      const cols = Array.from({length: numberOfCoordinates}, () => Math.floor(Math.random() * this.numberOfCols()))
-      this.setState({ ...this.state, activationBroadcast: { rows, cols } })
+      this.getActivationPoints(9).then((sobolPoints) => {
+        const rows = sobolPoints.map(([_x, y]) => Math.floor(y * this.numberOfRows))
+        const cols = sobolPoints.map(([x, _y]) => Math.floor(x * this.numberOfCols))
+        this.setState({ ...this.state, activationBroadcast: { rows, cols } })
+      })
+
+      // Update background color based on time of the day
+      const t = dayFractionNow()
+      const lightness = waveMap(t, 0.985, 1, 0.5) + 0.015
+      const backgroundColor = new HslaColor(0, 0, lightness, 1)
+      document.body.style.backgroundColor = backgroundColor.toColorString()
     }, ACTIVATION_PERIOD)
 
-    const decayTimer = setInterval(() => {
-      const numberOfCoordinates = 16
-      const rows = Array.from({length: numberOfCoordinates}, () => Math.floor(Math.random() * this.numberOfRows()))
-      const cols = Array.from({length: numberOfCoordinates}, () => Math.floor(Math.random() * this.numberOfCols()))
-      this.setState({ ...this.state, decayBroadcast: { rows, cols } })
-    }, DECAY_PERIOD)
-
-    this.setState({...this.state, activationTimer, decayTimer});
+    this.setState({ ...this.state, activationTimer })
   }
 
   componentWillUnmount() {
     clearInterval(this.state.activationTimer)
-    clearInterval(this.state.decayTimer)
   }
 }
 
