@@ -15,5 +15,5 @@
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE10+/Edge */
   user-select: none; /* Standard */
-  font: normal normal 300 150% 'IBM Plex Mono', 'JetBrains Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace;
+  font: normal normal 400 80% 'IBM Plex Mono', 'JetBrains Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace;
 }

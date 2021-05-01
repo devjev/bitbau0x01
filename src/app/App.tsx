@@ -24,7 +24,7 @@ class App extends React.Component<AppProps, AppState> {
   private readonly numberOfCols: number
   private readonly numberOfPoints: number
   private readonly safetyFactor: number = 1.2
-  private readonly cellDenominator: number = 24
+  private readonly cellDenominator: number = 27
 
   private activationPointIndex: number = 0
   private decayPointIndex: number = 0
@@ -72,14 +72,14 @@ class App extends React.Component<AppProps, AppState> {
   defaultColorMap(value: number): CellColor {
     const t = dayFractionNow()
     const foregroundLightness = waveMap(t, 0.7, 1, 0) + 0.1
+    const foregroundSaturation = waveMap(t, 0.3, 1, 0.5) + 0.3;
     const backgroundLightness = waveMap(t, 0.5, 1, 0.5) + 0.1
-    const backgroundAlpha = waveMap(t, 0.1, 1, 0.5) + 0.05
+    const backgroundAlpha = waveMap(t, 0.025, 1, 0.5) + 0.4
     const backgroundSaturation = waveMap(t, 0.1, 1, 0.5) + 0.25
-    const hue1 = waveMap(value, 360, 32, 0)
-    const hue2 = waveMap(value, 360, 16, 64)
+    const hue = waveMap(value, 310, 22.5, 45)
     return {
-      foreground: new HslaColor(hue2, 0.85, foregroundLightness, 0.8),
-      background: new HslaColor(hue1, backgroundSaturation, backgroundLightness, backgroundAlpha)
+      foreground: new HslaColor(hue, foregroundSaturation, foregroundLightness, 0.8),
+      background: new HslaColor(hue, backgroundSaturation, backgroundLightness, backgroundAlpha)
     }
   }
 
@@ -108,6 +108,18 @@ class App extends React.Component<AppProps, AppState> {
         <div className="cells-container">
           {cells}
         </div>
+        <main id="main-content" className="content" style={{
+          position: "absolute",
+          top: `${this.cellHeight*3}px`,
+          left: `${this.cellWidth*2}px`,
+          width: `${this.cellWidth*9}px`,
+          height: `${this.cellHeight*9}px`,
+        }}>
+          <h1 className="title">BITBAU</h1>
+          <p>Hi, my name is Jevgeni. I build products. This is a place where I put my tech stuff.</p>
+          <p><a href="https://github.com/devjev">Github Profile</a></p>
+          <p><a href="https://jevgeni.blog/">Blog</a></p>
+        </main>
       </div>
     )
   }
@@ -122,9 +134,21 @@ class App extends React.Component<AppProps, AppState> {
 
       // Update background color based on time of the day
       const t = dayFractionNow()
-      const lightness = waveMap(t, 0.985, 1, 0.5) + 0.015
-      const backgroundColor = new HslaColor(0, 0, lightness, 1)
+      const lightnessBody = waveMap(t, 0.985, 1, 0.5) + 0.015
+      const backgroundColor = new HslaColor(0, 0, lightnessBody, 1)
       document.body.style.backgroundColor = backgroundColor.toColorString()
+
+      // Update content area
+      const lightnessContent = waveMap(t, 0.9, 1, 0.5) + 0.1
+      const lightnessCopy = waveMap(t, 0.9, 1, 0) + 0.1
+      const backgroundColorContent = new HslaColor(0, 0, lightnessContent, 0.4)
+      const copyColor = new HslaColor(0, 0, lightnessCopy, 1)
+      if (document.getElementById("main-content")) {
+        // @ts-ignore
+        document.getElementById("main-content").style.backgroundColor = backgroundColorContent.toColorString()
+        // @ts-ignore
+        document.getElementById("main-content").style.color = copyColor.toColorString()
+      }
     }, ACTIVATION_PERIOD)
 
     this.setState({ ...this.state, activationTimer })
