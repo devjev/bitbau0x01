@@ -24,7 +24,7 @@ class App extends React.Component<AppProps, AppState> {
   private readonly numberOfCols: number
   private readonly numberOfPoints: number
   private readonly safetyFactor: number = 1.2
-  private readonly cellDenominator: number = 27
+  private readonly cellDenominator: number = 24
 
   private activationPointIndex: number = 0
   private decayPointIndex: number = 0
@@ -116,7 +116,7 @@ class App extends React.Component<AppProps, AppState> {
           height: `${this.cellHeight*9}px`,
         }}>
           <h1 className="title">BITBAU</h1>
-          <p>Hi, my name is Jevgeni. I build products. This is a place where I put my tech stuff.</p>
+          <p>Hi, my name is Jev. I build products. This is a place where I put my tech stuff.</p>
           <p><a href="https://github.com/devjev">Github Profile</a></p>
           <p><a href="https://jevgeni.blog/">Blog</a></p>
         </main>
@@ -142,7 +142,7 @@ class App extends React.Component<AppProps, AppState> {
       const lightnessContent = waveMap(t, 0.9, 1, 0.5) + 0.1
       const lightnessCopy = waveMap(t, 0.9, 1, 0) + 0.1
       const backgroundColorContent = new HslaColor(0, 0, lightnessContent, 0.4)
-      const copyColor = new HslaColor(0, 0, lightnessCopy, 1)
+      const copyColor = new HslaColor(0, 0, lightnessCopy, 0.77)
       if (document.getElementById("main-content")) {
         // @ts-ignore
         document.getElementById("main-content").style.backgroundColor = backgroundColorContent.toColorString()
