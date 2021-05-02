@@ -1,8 +1,15 @@
+:root {
+  --shadow-color: hsla(0, 0%, 50%, 0.8)
+}
+
 .cells-container {
+  --horizontal-offset: 100px;
+  --vertical-offset: 100px;
+
   position: absolute;
   top: 0;
   left: 0;
-  height: calc(100vh + 100px);
+  height: calc(100vh + var(--horizontal-offset));
   width: 100vw;
   overflow: hidden;
   padding: 0;
@@ -12,8 +19,7 @@
 .content {
   margin:-100px 0;
   padding: 2.5rem;
-  background-color: hsla(0, 0%, 80%, 0.8);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(64px);
   box-sizing: border-box;
   font-family: aktiv-grotesk,sans-serif;
   font-weight: 400;
@@ -21,6 +27,9 @@
   font-size: 18pt;
   letter-spacing: 0.2pt;
   line-height: 28pt;
+
+  -webkit-box-shadow: 1px 3px 16px -6px var(--shadow-color);
+  box-shadow: 1px 3px 16px -6px var(--shadow-color);
 }
 
 .title {
@@ -30,9 +39,18 @@
 }
 
 h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 ;
+  padding: 0;
+}
+
+h1 {
   font-size: 42pt;
   line-height: 42pt;
   letter-spacing: -0.1pt;
-  margin: 0 0 ;
-  padding: 0;
+}
+
+h2 {
+  font-size: 18pt;
+  line-height: 18pt;
+  margin-top: 36pt;
 }
